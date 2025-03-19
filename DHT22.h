@@ -29,7 +29,9 @@ typedef enum {
 typedef void (*print_func_t)(const char *format, ...);
 void DHT22_Init();
 
-extern TIM_HandleTypeDef htim3;
+//extern TIM_HandleTypeDef htim3;
+//extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim6;
 
 void DHT22_Start_Reading(void);
 DHT22_Status DHT22_Get_Data(uint16_t *Temperature, uint16_t *Humidity);

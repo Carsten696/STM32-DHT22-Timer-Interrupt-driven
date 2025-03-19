@@ -48,12 +48,12 @@ typedef struct {
 static void Timer_Init(void)
 {
     // Timer-Interrupt starten
-    HAL_TIM_Base_Start_IT(&htim3);  // Direkt die externe htim3 verwenden
+    HAL_TIM_Base_Start_IT(&htim6);  // Direkt die externe htim3 verwenden
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-    if(htim->Instance == TIM3)
+    if(htim->Instance == TIM6)
     {
         uint8_t current_level = HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_3);
 
@@ -144,6 +144,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                             {
                                 data_ready = 1;
                                 dht_state = DHT_IDLE;
+                                // Timer stoppen wenn Messung fertig
+                                HAL_TIM_Base_Stop_IT(&htim6);
                             }
                         }
                     }
@@ -182,6 +184,7 @@ static void set_gpio_input(void) {
 
 void DHT22_Init(void) {
     // GPIO Clocks aktivieren
+	HAL_NVIC_SetPriority(TIM2_IRQn, 5, 0);
     __HAL_RCC_GPIOD_CLK_ENABLE();
 
     // DHT22 Pin als Output konfigurieren
@@ -197,7 +200,7 @@ void DHT22_Init(void) {
     HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
     // Timer für 10µs Sampling initialisieren
-    HAL_TIM_Base_Start_IT(&htim3);
+    //HAL_TIM_Base_Start_IT(&htim6);
 
     dht_state = DHT_IDLE;
 }
@@ -205,6 +208,9 @@ void DHT22_Init(void) {
 
 void DHT22_Start_Reading(void) {
     if(dht_state == DHT_IDLE) {
+        // Timer starten
+        HAL_TIM_Base_Start_IT(&htim6);  // oder welchen Timer wir nutzen
+
         // Start-Signal senden
         set_gpio_output();
         HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3, GPIO_PIN_RESET);
@@ -213,7 +219,7 @@ void DHT22_Start_Reading(void) {
 
         // Auf Input umschalten
         set_gpio_input();
-        dht_state = DHT_WAIT_RESPONSE;  // Neuer Anfangszustand
+        dht_state = DHT_WAIT_RESPONSE;
         bit_time = 0;
     }
 }
