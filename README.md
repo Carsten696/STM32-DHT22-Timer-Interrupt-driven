@@ -53,7 +53,8 @@ The library uses Timer6 for precise timing during DHT22 communication:
 ## SDMMC Interface Conflicts
 
 Important note regarding SDMMC interface conflicts:
-- Timer interrupts (any timer) interfere with SDMMC communication
+- Timer interrupts (any timer) interfere with SDMMC communication. I used this this approach: STM32 SDMMC (4-Bit Mode) FatFS Example; see here:
+https://deepbluembedded.com/stm32-sdmmc-tutorial-examples-dma/#stm32-sdmmc-4bit-mode-fatfs-example-project
 - Tested with different timers (TIM2, TIM3, TIM5, TIM6) - all showed conflicts
 - So do make sure that you do not fire any timer interrupts during SDMMC1 (that is what I tested) operation. However, I did not test which specific (SDMMC / FatFs) functions are sensitive to timer interrupts. The SD-Card would not mount was where the error occured in my case. This library uses the respective timer interrupt starting with DHT22_Start_Reading and switches off the interrupts in the ISR if the data is deemed to be complete.
 
