@@ -42,6 +42,9 @@ Thanks to Claude 3.5 Sonnet for the (somwhat unhelpful) help.
 
 2. **Add to main.c:**
    ```c
+   /* USER CODE BEGIN Includes */
+   #include <dht22.h>
+   
    /* Private variables */
    extern TIM_HandleTypeDef htim6;
 
@@ -61,6 +64,8 @@ The library uses Timer6 for precise timing during DHT22 communication:
 Important note regarding SDMMC interface conflicts:
 - Timer interrupts (any timer) interfere with SDMMC communication. I used this this approach: STM32 SDMMC (4-Bit Mode) FatFS Example; see here:
 https://deepbluembedded.com/stm32-sdmmc-tutorial-examples-dma/#stm32-sdmmc-4bit-mode-fatfs-example-project
+- I also had multiple problems with connectig to the SD-Card (Error! While Mounting SD Card, Error Code: (3)), however some of those seemed to be connected to electrical charge issues as touching the SD-Card interface seemed to sovle the issue somtimes.
+- I also used a different power source for the DHT22 as only connecting the DHT22 to the 3.3V pin of the NUCLEO-Board seemed to result in connection problems with the SD-Card. 
 - Tested with different timers (TIM2, TIM3, TIM5, TIM6) - all showed conflicts
 - So do make sure that you do not fire any timer interrupts during SDMMC1 (that is what I tested) operation. However, I did not test which specific (SDMMC / FatFs) functions are sensitive to timer interrupts. The SD-Card would not mount was where the error occured in my case. This library uses the respective timer interrupt starting with DHT22_Start_Reading and switches off the interrupts in the ISR if the data is deemed to be complete.
 
