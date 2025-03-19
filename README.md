@@ -1,87 +1,101 @@
 Thanks to Claude 3.5 Sonnet for the (somwhat unhelpful) help.
 
-# DHT22 Bibliothek für STM32H7 - Installationsanleitung
+# DHT22 Library for STM32H7 - Installation Guide
 
-## Hardware-Voraussetzungen
-- STM32H7 Mikrocontroller (z.B. NUCLEO-H753ZI)
-- DHT22 Temperatursensor
-- Verbindungen:
-  - DHT22 Datenpin → PD3
-  - Optional: Debug-Pin → PD4
+## Hardware Requirements
+- STM32H7 microcontroller (e.g., NUCLEO-H753ZI)
+- DHT22 temperature and humidity sensor
+- Connections:
+  - DHT22 data pin → PD3
+  - Optional: Debug pin → PD4
+  - Pull-up resistor (4.7kΩ) on data pin
 
-## Software-Voraussetzungen
+## Software Requirements
 - STM32CubeIDE
-- HAL Bibliothek für STM32H7
+- HAL Library for STM32H7
 
-## CubeMX Konfiguration
+## CubeMX Configuration
 
-1. **Timer3 Konfiguration:**
+1. **Timer6 Configuration:**
    ```
    Mode: Internal Clock
    Prescaler: 127
    Counter Period: 4
    ```
-   Im NVIC: Timer3 global interrupt aktivieren
+   Enable Timer6 global interrupt in NVIC
 
-2. **GPIO Konfiguration:**
-   - PD3: GPIO_Output (wird später durch Software umgeschaltet)
-   - PD4: GPIO_Output (für Debug-Signale)
+2. **GPIO Configuration:**
+   - PD3: GPIO_Output (will be switched by software)
+   - PD4: GPIO_Output (for debug signals)
 
-## Installation der Bibliothek
+## Library Installation
 
-1. **Dateien kopieren:**
-   - `DHT22.h` in den `Core/Inc` Ordner
-   - `DHT22.c` in den `Core/Src` Ordner
+1. **Copy Files:**
+   - `DHT22.h` to `Core/Inc` folder
+   - `DHT22.c` to `Core/Src` folder
 
-2. **In main.c hinzufügen:**
+2. **Add to main.c:**
    ```c
    /* Private variables */
-   extern TIM_HandleTypeDef htim3;
+   extern TIM_HandleTypeDef htim6;
 
    /* USER CODE BEGIN 2 */
    DHT22_Init();
    ```
 
-3. **Beispiel für die Verwendung:**
-   ```c
-   int main(void)
-   {
-       /* MCU Configuration etc */
-       uint16_t temperature, humidity;
-       
-       /* Initialize all configured peripherals */
-       DHT22_Init();
-       
-       while (1)
-       {
-           DHT22_Start_Reading();
-           HAL_Delay(50);  // Warten auf Messung
-           
-           if(DHT22_Get_Data(&temperature, &humidity) == DHT22_OK)
-           {
-               // Temperatur = temperature/10 °C
-               // Luftfeuchtigkeit = humidity/10 %
-           }
-           
-           HAL_Delay(2000);  // Mind. 2 Sekunden zwischen Messungen
-       }
-   }
-   ```
+## Timer Operation
 
-## Wichtige Hinweise
+The library uses Timer6 for precise timing during DHT22 communication:
+- Timer starts when measurement begins
+- Generates 10µs interrupts during data acquisition
+- Automatically stops after measurement completion
 
-1. Der Timer muss genau 10µs Interrupts erzeugen
-2. Zwischen den Messungen mindestens 2 Sekunden warten
-3. Die Werte müssen durch 10 geteilt werden für °C bzw. %
-4. Pull-up Widerstand (4.7kΩ) am Datenpin erforderlich
+## SDMMC Interface Conflicts
 
-## Funktionen
+Important note regarding SDMMC interface conflicts:
+- Timer interrupts (any timer) interfere with SDMMC communication
+- Tested with different timers (TIM2, TIM3, TIM5, TIM6) - all showed conflicts
+- So do make sure that you do not fire any timer interrupts during SDMMC1 (that is what I tested) operation. However, I did not test which specific (SDMMC / FatFs) functions are sensitive to timer interrupts. The SD-Card would not mount was where the error occured in my case. This library uses the respective timer interrupt starting with DHT22_Start_Reading and switches off the interrupts in the ISR if the data is deemed to be complete.
 
-- `DHT22_Init()`: Initialisiert GPIO und Timer
-- `DHT22_Start_Reading()`: Startet eine neue Messung
-- `DHT22_Get_Data()`: Liest die Messwerte aus
+## Usage Example
 
-## Rückgabewerte
+```c
+int main(void)
+{
+    uint16_t temperature, humidity;
+    
+    DHT22_Init();
+    
+    while (1)
+    {
+        DHT22_Start_Reading();
+        HAL_Delay(50);  // Wait for measurement
+        
+        if(DHT22_Get_Data(&temperature, &humidity) == DHT22_OK)
+        {
+            // Temperature = temperature/10 °C
+            // Humidity = humidity/10 %
+        }
+        
+        HAL_Delay(2000);  // Minimum 2 seconds between measurements
+    }
+}
+```
+
+## Important Notes
+
+1. Timer generates precise 10µs interrupts during measurement
+2. Minimum 2 seconds between measurements required
+3. Values need to be divided by 10 for °C and %
+4. Pull-up resistor (4.7kΩ) required on data pin
+
+## Functions
+
+- `DHT22_Init()`: Initializes GPIO and Timer
+- `DHT22_Start_Reading()`: Starts new measurement
+- `DHT22_Get_Data()`: Reads measurement values
+
+## Return Values
 
 ```c
 typedef enum {
@@ -92,5 +106,13 @@ typedef enum {
 } DHT22_Status;
 ```
 
-## Debug-Möglichkeiten
-PD4 kann zur Signalanalyse verwendet werden. Im Code sind Debug-Ausgaben vorgesehen (aktuell auskommentiert).
+## Debug Features
+PD4 can be used for signal analysis:
+- Shows DHT22 signal edge changes
+- Indicates bit detection (1 pulse for '0', 2 pulses for '1')
+- Helps with timing analysis
+
+## Known Issues
+- Timer interrupts conflict with SDMMC interface
+- In my circuit I found signal spikes during reading the data which made it difficult to use signal flank interrupts to detect the bits. ToDo: Robustify that solution.
+Would you like any additions or changes to this documentation?
