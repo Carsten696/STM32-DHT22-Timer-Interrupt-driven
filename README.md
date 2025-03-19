@@ -17,10 +17,10 @@ Thanks to Claude 3.5 Sonnet for the (somwhat unhelpful) help.
 ## CubeMX Configuration
 
 0. **USART3 hint**
-While using the STM32CubeIDE I had some issues with the NUCLEO-H753 board confuguration:
-- While deselecting the "Virtual Com Port" during the configuration of the project (there is a winwo popping up asking about the user LEDs and the user button and demonstation code), I could not activate the USART3 interface in HAL.
-- This can be resoved by opening Pinout and Configuration window (the .ioc file) and going to the category "Bsp" and then selecting and then deselecting the "Virtual Com Port".
-- Now it is possible to configure USART3.
+  While using the STM32CubeIDE I had some issues with the NUCLEO-H753 board confuguration:
+   - While deselecting the "Virtual Com Port" during the configuration of the project (there is a winwo popping up asking about the user LEDs and the user button and demonstation code), I could not activate the USART3 interface in HAL.
+   - This can be resoved by opening Pinout and Configuration window (the .ioc file) and going to the category "Bsp" and then selecting and then deselecting the "Virtual Com Port".
+   - Now it is possible to configure USART3.
 
 1. **Timer6 Configuration:**
    ```
