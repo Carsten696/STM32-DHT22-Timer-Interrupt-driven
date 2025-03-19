@@ -115,4 +115,3 @@ PD4 can be used for signal analysis:
 ## Known Issues
 - Timer interrupts conflict with SDMMC interface
 - In my circuit I found signal spikes during reading the data which made it difficult to use signal flank interrupts to detect the bits. ToDo: Robustify that solution.
-Would you like any additions or changes to this documentation?
